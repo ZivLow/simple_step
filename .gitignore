@@ -5,5 +5,3 @@ esp-idf-vscode-generated.gdb
 debug.log
 dependencies.lock
 /managed_components
-/components/*
-!/components/as5600/

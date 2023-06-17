@@ -1,3 +1,6 @@
 [submodule "components/as5600"]
 	path = components/as5600
 	url = git@github.com:ZivLow/as5600.git
+[submodule "components/TMC-API"]
+	path = components/TMC-API
+	url = git@github.com:ZivLow/TMC-API.git
