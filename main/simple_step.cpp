@@ -1,5 +1,3 @@
-
-
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_log.h"
@@ -8,7 +6,6 @@
 #include "button_tmc2209_enable_task.cpp"
 #include "rotary_sensor_task.cpp"
 #include "stepper_motor_task.cpp"
-
 
 TaskHandle_t button_tmc2209_enable_handler;
 TaskHandle_t rotary_sensor_handler;
@@ -39,19 +36,3 @@ void app_main()
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }
-
-
-
-
-
-    // // Configuring ISR
-    // gpio_config_t io_isr_conf;
-    // io_isr_conf.intr_type = GPIO_INTR_NEGEDGE;                            //disable interrupt
-    // io_isr_conf.mode = GPIO_MODE_INPUT;                                   //set as output mode
-    // io_isr_conf.pin_bit_mask = (1ULL<<BUTTON_PIN);                        //bit mask of the pins that you want to set,e.g.GPIO18
-    // io_isr_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;                     //disable pull-down mode
-    // io_isr_conf.pull_up_en = GPIO_PULLUP_ENABLE;                          //disable pull-up mode
-    // ESP_ERROR_CHECK(gpio_config(&io_isr_conf));                           //configure GPIO with the given settings
-
-    // gpio_install_isr_service(0);
-    // gpio_isr_handler_add(BUTTON_PIN, button_isr_handler, (void*) BUTTON_PIN);
