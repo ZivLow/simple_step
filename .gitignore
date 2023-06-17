@@ -1,7 +1,7 @@
 /.devcontainer
 /.vscode/c_cpp_properties.json
 /build
-.sdkconfig.old
+sdkconfig.old
 esp-idf-vscode-generated.gdb
 debug.log
 dependencies.lock
