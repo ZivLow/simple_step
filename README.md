@@ -9,10 +9,30 @@ git clone --recurse-submodules git@github.com:ZivLow/simple_step.git
 2. "Add vscode configuration folder"
 
 ## Update submodules to latest version of remote
+1. Navigate to the submodule directory:
 ```
+cd components/as5600
+```
+2. Push updates to remote submodule:
+```
+git switch master
+git fetch
+git add .
+git commit -S -m "update submodule"
+git push
+cd ../..
 git submodule update --remote
+git fetch
+git status
 ```
-
+3. Update main repository:
+```
+git add .
+git commit -S -m "update submodule"
+git push
+git pull
+git status
+```
 ## Test environment
 - ESP32 chip
 - ESP-IDF v5.1
