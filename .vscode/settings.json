@@ -36,6 +36,7 @@
     "future": "cpp",
     "optional": "cpp",
     "*.tcc": "cpp",
-    "ostream": "cpp"
+    "ostream": "cpp",
+    "esp_err.h": "c"
   }
 }

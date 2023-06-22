@@ -22,7 +22,7 @@ ConfigurationTypeDef *tmc_2209_driver_config = &tmc_2209_driver_config_def;
 
 static const char *TAG = "TMC2209 Driver";
 
-TaskHandle_t stepper_periodic_handler;
+static TaskHandle_t stepper_periodic_handler;
 
 
 
@@ -96,7 +96,7 @@ static void stepper_motor_periodic_task(void *params)
 // |                                          Main Task                                              |
 // |================================================================================================ |
 
-static void stepper_motor_task(void *params)
+void stepper_motor_task(void *params)
 {
     const gpio_pins_config_t *gpio_pins_config = (gpio_pins_config_t *)params;
 
@@ -155,10 +155,10 @@ static void stepper_motor_task(void *params)
         TMC2209_FIELD_WRITE(tmc2209_driver, TMC2209_VACTUAL, TMC2209_VACTUAL_MASK, TMC2209_VACTUAL_SHIFT, 5000);
         
         int32_t gconf_status = TMC2209_FIELD_READ(tmc2209_driver, TMC2209_GCONF, TMC2209_PDN_DISABLE_MASK, TMC2209_PDN_DISABLE_SHIFT);
-        ESP_LOGI(TAG, "gconf_status: %d", gconf_status);
+        ESP_LOGI(TAG, "gconf_status: %" PRIi32, gconf_status);
 
         int32_t driver_version_status = TMC2209_FIELD_READ(tmc2209_driver, TMC2209_IOIN, TMC2209_VERSION_MASK, TMC2209_VERSION_SHIFT);
-        ESP_LOGI(TAG, "driver_version_status: %d", driver_version_status);
+        ESP_LOGI(TAG, "driver_version_status: %" PRIi32, driver_version_status);
         
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }

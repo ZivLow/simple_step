@@ -13,7 +13,7 @@ extern "C" {
 static const char *TAG_BUTTON_TMC2209_ENABLE = "Button TMC2209 Enable";
 
 static QueueHandle_t button_isr_queue = NULL;
-button_handle_t g_btns[1] = {0};
+static button_handle_t g_btns[1] = {0};
 extern TaskHandle_t stepper_motor_handler;
 
 // |================================================================================================ |
@@ -49,7 +49,7 @@ static void setup_button(const gpio_pins_config_t *gpio_pins_config)
 // |                                          Main Task                                              |
 // |================================================================================================ |
 
-static void button_tmc2209_enable_task(void *params)
+void button_tmc2209_enable_task(void *params)
 {
     const gpio_pins_config_t *gpio_pins_config = (gpio_pins_config_t *)params;
 

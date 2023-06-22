@@ -12,3 +12,7 @@ git clone --recurse-submodules git@github.com:ZivLow/simple_step.git
 ```
 git submodule update --remote
 ```
+
+## Test environment
+- ESP32 chip
+- ESP-IDF v5.1

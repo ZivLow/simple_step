@@ -10,13 +10,13 @@ extern "C" {
 #include "driver_as5600_basic.h"
 
 static const char *TAG_ROTARY_SENSOR = "Rotary_Sensor";
-as5600_handle_t gs_handle; /**< as5600 handle */
+as5600_handle_t gs_handle; /**< as5600 handle with link to extern variable in driver_as5600_basic.c*/
 
 // |================================================================================================ |
 // |                                          Main Task                                              |
 // |================================================================================================ |
 
-static void rotary_sensor_task(void *params)
+void rotary_sensor_task(void *params)
 {
     as5600_info_t info;
 
@@ -43,7 +43,7 @@ static void rotary_sensor_task(void *params)
     ESP_LOGI(TAG_ROTARY_SENSOR, "as5600: chip is %s.\n", info.chip_name);
     ESP_LOGI(TAG_ROTARY_SENSOR, "as5600: manufacturer is %s.\n", info.manufacturer_name);
     ESP_LOGI(TAG_ROTARY_SENSOR, "as5600: interface is %s.\n", info.interface);
-    ESP_LOGI(TAG_ROTARY_SENSOR, "as5600: driver version is %d.%d.\n", info.driver_version / 1000, (info.driver_version % 1000) / 100);
+    ESP_LOGI(TAG_ROTARY_SENSOR, "as5600: driver version is %" PRIi32 ".%" PRIi32 ".\n", info.driver_version / 1000, (info.driver_version % 1000) / 100);
     ESP_LOGI(TAG_ROTARY_SENSOR, "as5600: min supply voltage is %0.1fV.\n", info.supply_voltage_min_v);
     ESP_LOGI(TAG_ROTARY_SENSOR, "as5600: max supply voltage is %0.1fV.\n", info.supply_voltage_max_v);
     ESP_LOGI(TAG_ROTARY_SENSOR, "as5600: max current is %0.2fmA.\n", info.max_current_ma);
@@ -84,32 +84,32 @@ static void rotary_sensor_task(void *params)
         }
 
         // Debug for AS5600 status
-        ESP_LOGD(TAG_ROTARY_SENSOR, "AS5600_status = %d.\n", AS5600_status);
+        ESP_LOGD(TAG_ROTARY_SENSOR, "AS5600_status = %i.\n", AS5600_status);
 
         // Get the gain of the Automatic Gain Control (AGC). A middle value is preferred. 5V: 0-255. 3.3V: 0-128.
         as5600_get_agc(&gs_handle, &AS5600_agc);
 
         // Debug for AS5600 AGC Gain value
-        ESP_LOGD(TAG_ROTARY_SENSOR, "AS5600_agc = %d.\n", AS5600_agc);
+        ESP_LOGD(TAG_ROTARY_SENSOR, "AS5600_agc = %i.\n", AS5600_agc);
 
         // Get the magnitude of the magnetic field
         as5600_get_magnitude(&gs_handle, &AS5600_magnitude);
 
         // Debug for AS5600 magnetic field magnitude. 0-4095
-        ESP_LOGD(TAG_ROTARY_SENSOR, "AS5600_magnitude = %d.\n", AS5600_magnitude);
+        ESP_LOGD(TAG_ROTARY_SENSOR, "AS5600_magnitude = %i.\n", AS5600_magnitude);
 
         // Read stepper angle from AS5600
         ESP_ERROR_CHECK(as5600_basic_read(&deg));
         ESP_LOGI(TAG_ROTARY_SENSOR, "Stepper angle is: %.2f degrees.\n", deg);
 
         as5600_get_start_position(&gs_handle, &start_pos);
-        ESP_LOGI(TAG_ROTARY_SENSOR, "AS5600 start position is: %d.\n", start_pos);
+        ESP_LOGI(TAG_ROTARY_SENSOR, "AS5600 start position is: %i.\n", start_pos);
 
         as5600_get_stop_position(&gs_handle, &stop_pos);
-        ESP_LOGI(TAG_ROTARY_SENSOR, "AS5600 stop position is: %d.\n", stop_pos);
+        ESP_LOGI(TAG_ROTARY_SENSOR, "AS5600 stop position is: %i.\n", stop_pos);
 
         as5600_get_max_angle(&gs_handle, &max_angle);
-        ESP_LOGI(TAG_ROTARY_SENSOR, "AS5600 max angle is: %d degrees.\n", max_angle);
+        ESP_LOGI(TAG_ROTARY_SENSOR, "AS5600 max angle is: %i degrees.\n", max_angle);
 
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
