@@ -33,6 +33,14 @@ git push
 git pull
 git status
 ```
+
+# ESP-IDF useful commands
+## Create sdkconfig.defaults
+Make changes after using menuconfig, then
+```
+idf.py save-defconfig
+```
+
 ## Test environment
 - ESP32 chip
 - ESP-IDF v5.1

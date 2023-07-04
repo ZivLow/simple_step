@@ -1,6 +1,7 @@
 /.devcontainer
 /.vscode/c_cpp_properties.json
 /build
+sdkconfig
 sdkconfig.old
 esp-idf-vscode-generated.gdb
 debug.log
