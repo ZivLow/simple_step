@@ -98,6 +98,8 @@ static void stepper_motor_periodic_task(void *params)
 
 void stepper_motor_task(void *params)
 {
+    esp_log_level_set(TAG, ESP_LOG_DEBUG);
+
     const gpio_pins_config_t *gpio_pins_config = (gpio_pins_config_t *)params;
 
     // Setup gpio and uart for TMC2209 driver
@@ -152,13 +154,13 @@ void stepper_motor_task(void *params)
         TMC2209_FIELD_WRITE(tmc2209_driver, TMC2209_GCONF, TMC2209_SHAFT_MASK, TMC2209_SHAFT_SHIFT, direction);
 
         // Set motor velocity
-        TMC2209_FIELD_WRITE(tmc2209_driver, TMC2209_VACTUAL, TMC2209_VACTUAL_MASK, TMC2209_VACTUAL_SHIFT, 5000);
+        TMC2209_FIELD_WRITE(tmc2209_driver, TMC2209_VACTUAL, TMC2209_VACTUAL_MASK, TMC2209_VACTUAL_SHIFT, 1000);
         
         int32_t gconf_status = TMC2209_FIELD_READ(tmc2209_driver, TMC2209_GCONF, TMC2209_PDN_DISABLE_MASK, TMC2209_PDN_DISABLE_SHIFT);
-        ESP_LOGI(TAG, "gconf_status: %" PRIi32, gconf_status);
+        ESP_LOGD(TAG, "gconf_status: %" PRIi32, gconf_status);
 
         int32_t driver_version_status = TMC2209_FIELD_READ(tmc2209_driver, TMC2209_IOIN, TMC2209_VERSION_MASK, TMC2209_VERSION_SHIFT);
-        ESP_LOGI(TAG, "driver_version_status: %" PRIi32, driver_version_status);
+        ESP_LOGD(TAG, "driver_version_status: %" PRIi32, driver_version_status);
         
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }

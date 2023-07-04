@@ -51,6 +51,8 @@ static void setup_button(const gpio_pins_config_t *gpio_pins_config)
 
 void button_tmc2209_enable_task(void *params)
 {
+    esp_log_level_set(TAG_BUTTON_TMC2209_ENABLE, ESP_LOG_INFO);
+
     const gpio_pins_config_t *gpio_pins_config = (gpio_pins_config_t *)params;
 
     // Configure Button ISR Pin
@@ -79,7 +81,7 @@ void button_tmc2209_enable_task(void *params)
                 vTaskSuspend(stepper_motor_handler);
                 break;
             }
-            ESP_LOGI(TAG_BUTTON_TMC2209_ENABLE, "EN_PIN level is: %d\n", gpio_get_level(gpio_pins_config->EN_PIN));
+            ESP_LOGD(TAG_BUTTON_TMC2209_ENABLE, "EN_PIN level is: %d\n", gpio_get_level(gpio_pins_config->EN_PIN));
         }
     }
 

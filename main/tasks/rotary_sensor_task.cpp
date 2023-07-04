@@ -18,6 +18,8 @@ as5600_handle_t gs_handle; /**< as5600 handle with link to extern variable in dr
 
 void rotary_sensor_task(void *params)
 {
+    esp_log_level_set(TAG_ROTARY_SENSOR, ESP_LOG_INFO);
+    
     as5600_info_t info;
 
     uint8_t AS5600_status;
@@ -29,9 +31,9 @@ void rotary_sensor_task(void *params)
     uint16_t stop_pos;  // stop position of AS5600
     uint16_t max_angle; // max angle allowed on AS5600
 
-    static uint16_t set_start_pos = 2;
+    static uint16_t set_start_pos = 0;
     // static uint16_t set_stop_pos = 2000;
-    static uint16_t set_max_angle = 280;
+    static uint16_t set_max_angle = 360;
 
     
     // Initialize AS5600 magnetic rotary sensor
@@ -63,7 +65,7 @@ void rotary_sensor_task(void *params)
 
         if (AS5600_status & AS5600_STATUS_MD)
         {
-            ESP_LOGI(TAG_ROTARY_SENSOR, "Magnet detected.\n");
+            ESP_LOGD(TAG_ROTARY_SENSOR, "Magnet detected.\n");
 
             if (AS5600_status & AS5600_STATUS_MH)
             {
@@ -103,13 +105,15 @@ void rotary_sensor_task(void *params)
         ESP_LOGI(TAG_ROTARY_SENSOR, "Stepper angle is: %.2f degrees.\n", deg);
 
         as5600_get_start_position(&gs_handle, &start_pos);
-        ESP_LOGI(TAG_ROTARY_SENSOR, "AS5600 start position is: %i.\n", start_pos);
+        ESP_LOGV(TAG_ROTARY_SENSOR, "AS5600 start position is: %i.\n", start_pos);
 
         as5600_get_stop_position(&gs_handle, &stop_pos);
-        ESP_LOGI(TAG_ROTARY_SENSOR, "AS5600 stop position is: %i.\n", stop_pos);
+        ESP_LOGV(TAG_ROTARY_SENSOR, "AS5600 stop position is: %i.\n", stop_pos);
 
         as5600_get_max_angle(&gs_handle, &max_angle);
-        ESP_LOGI(TAG_ROTARY_SENSOR, "AS5600 max angle is: %i degrees.\n", max_angle);
+        ESP_LOGV(TAG_ROTARY_SENSOR, "AS5600 max angle is: %i degrees.\n", max_angle);
+
+        as5600_interface_debug_print("HELLLOOOO     gngnreoingoesringorisneohgtiensohrsethosrihorsiorthinoetrnh.\n");
 
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }

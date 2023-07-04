@@ -37,6 +37,7 @@
     "optional": "cpp",
     "*.tcc": "cpp",
     "ostream": "cpp",
-    "esp_err.h": "c"
+    "esp_err.h": "c",
+    "esp_log.h": "c"
   }
 }
