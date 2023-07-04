@@ -98,7 +98,7 @@ static void stepper_motor_periodic_task(void *params)
 
 void stepper_motor_task(void *params)
 {
-    esp_log_level_set(TAG, ESP_LOG_DEBUG);
+    esp_log_level_set(TAG, ESP_LOG_INFO);
 
     const gpio_pins_config_t *gpio_pins_config = (gpio_pins_config_t *)params;
 

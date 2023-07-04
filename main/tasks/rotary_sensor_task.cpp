@@ -113,8 +113,6 @@ void rotary_sensor_task(void *params)
         as5600_get_max_angle(&gs_handle, &max_angle);
         ESP_LOGV(TAG_ROTARY_SENSOR, "AS5600 max angle is: %i degrees.\n", max_angle);
 
-        as5600_interface_debug_print("HELLLOOOO     gngnreoingoesringorisneohgtiensohrsethosrihorsiorthinoetrnh.\n");
-
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 
