@@ -1,16 +1,15 @@
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/i2c.h"
 #include "esp_log.h"
 #include "esp_err.h"
-#include "driver_as5600_basic.h"
+#include "simple_step.hpp"
+#include "tasks/rotary_sensor_task.hpp"
 
 static const char *TAG_ROTARY_SENSOR = "Rotary_Sensor";
 as5600_handle_t gs_handle; /**< as5600 handle with link to extern variable in driver_as5600_basic.c*/
+
+QueueHandle_t motor_angle_queue = NULL;
 
 // |================================================================================================ |
 // |                                          Main Task                                              |
@@ -26,6 +25,7 @@ void rotary_sensor_task(void *params)
     uint8_t AS5600_agc;
     uint16_t AS5600_magnitude;
     float deg; // degree of the stepper motor
+    int32_t int_deg;
 
     uint16_t start_pos; // start position of AS5600
     uint16_t stop_pos;  // stop position of AS5600
@@ -57,6 +57,9 @@ void rotary_sensor_task(void *params)
     ESP_ERROR_CHECK(as5600_set_start_position(&gs_handle, set_start_pos));
     // ESP_ERROR_CHECK(as5600_set_stop_position(&gs_handle, set_stop_pos));
     as5600_set_max_angle(&gs_handle, set_max_angle);
+
+    // Create queue for motor angle
+    motor_angle_queue = xQueueCreate(10, sizeof(int32_t));
 
     while (true)
     {
@@ -104,6 +107,12 @@ void rotary_sensor_task(void *params)
         ESP_ERROR_CHECK(as5600_basic_read(&deg));
         ESP_LOGI(TAG_ROTARY_SENSOR, "Stepper angle is: %.2f degrees.\n", deg);
 
+        int_deg = (int32_t)deg;
+        ESP_LOGD(TAG_ROTARY_SENSOR, "Sending to motor_angle_queue: %" PRIi32, int_deg);
+        xQueueSend(motor_angle_queue, (void *)&int_deg, 10);
+        //motor_angle_cb(NULL, (void *)&int_deg);
+        //ESP_LOGI(TAG_ROTARY_SENSOR, "Stepper int angle is: " PRIi32 "degrees.\n", int_deg);
+
         as5600_get_start_position(&gs_handle, &start_pos);
         ESP_LOGV(TAG_ROTARY_SENSOR, "AS5600 start position is: %i.\n", start_pos);
 
@@ -113,12 +122,8 @@ void rotary_sensor_task(void *params)
         as5600_get_max_angle(&gs_handle, &max_angle);
         ESP_LOGV(TAG_ROTARY_SENSOR, "AS5600 max angle is: %i degrees.\n", max_angle);
 
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        vTaskDelay(200 / portTICK_PERIOD_MS);
     }
 
     as5600_basic_deinit();
 }
-
-#ifdef __cplusplus
-}
-#endif

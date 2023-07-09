@@ -3,16 +3,20 @@
 #include "esp_log.h"
 #include "esp_err.h"
 #include "simple_step.hpp"
-#include "button_tmc2209_enable_task.cpp"
-#include "rotary_sensor_task.cpp"
-#include "stepper_motor_task.cpp"
+#include "tasks/button_tmc2209_enable_task.hpp"
+#include "tasks/rotary_sensor_task.hpp"
+#include "tasks/stepper_motor_task.hpp"
 
 TaskHandle_t button_tmc2209_enable_handler;
 TaskHandle_t rotary_sensor_handler;
 TaskHandle_t stepper_motor_handler;
 
+
+
 void app_main()
 {
+    
+
     static gpio_pins_config_t gpio_pins_config = {
         .UART_PORT_NUM  = UART_NUM_2,
         .DRIVER_ADDRESS = 0b00,         // TMC2209 Driver address according to MS1 and MS2

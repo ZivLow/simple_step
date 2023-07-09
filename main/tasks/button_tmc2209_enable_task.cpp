@@ -1,14 +1,10 @@
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
 #include "driver/gpio.h"
 #include "esp_log.h"
-#include "iot_button.h"
 #include "simple_step.hpp"
+#include "tasks/button_tmc2209_enable_task.hpp"
 
 static const char *TAG_BUTTON_TMC2209_ENABLE = "Button TMC2209 Enable";
 
@@ -87,8 +83,3 @@ void button_tmc2209_enable_task(void *params)
 
     iot_button_delete(g_btns[0]);
 }
-
-
-#ifdef __cplusplus
-}
-#endif

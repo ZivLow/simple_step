@@ -1,12 +1,14 @@
+#pragma once
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-#pragma once
-
 #include "driver/gpio.h"
 #include "driver/uart.h"
+
+extern QueueHandle_t motor_angle_queue;
 
 typedef struct gpio_pins_config_s {
         uart_port_t UART_PORT_NUM;
@@ -25,6 +27,10 @@ typedef struct gpio_pins_config_s {
 
             BUTTON_EN_PIN; // Button to enable or disable the motor driver
     } gpio_pins_config_t;
+
+// |================================================================================================ |
+// |                                          Functions                                              |
+// |================================================================================================ |
 
 void app_main();
 
