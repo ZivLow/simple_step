@@ -13,6 +13,9 @@ git clone --recurse-submodules git@github.com:ZivLow/simple_step.git
 ```
 cd components/as5600
 ```
+```
+cd components/TMC-API
+```
 2. Push updates to remote submodule:
 ```
 git switch master
