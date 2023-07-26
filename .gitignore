@@ -7,3 +7,5 @@ esp-idf-vscode-generated.gdb
 debug.log
 dependencies.lock
 /managed_components
+/partition_table/partitionTable.bin
+/partition_table/partitionTable.csv
