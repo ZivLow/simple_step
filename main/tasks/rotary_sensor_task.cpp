@@ -59,7 +59,7 @@ void rotary_sensor_task(void *params)
     as5600_set_max_angle(&gs_handle, set_max_angle);
 
     // Create queue for motor angle
-    motor_angle_queue = xQueueCreate(10, sizeof(int32_t));
+    motor_angle_queue = xQueueCreate(2, sizeof(float));
 
     while (true)
     {
@@ -107,9 +107,9 @@ void rotary_sensor_task(void *params)
         ESP_ERROR_CHECK(as5600_basic_read(&deg));
         ESP_LOGI(TAG_ROTARY_SENSOR, "Stepper angle is: %.2f degrees.\n", deg);
 
-        int_deg = (int32_t)deg;
-        ESP_LOGD(TAG_ROTARY_SENSOR, "Sending to motor_angle_queue: %" PRIi32, int_deg);
-        xQueueSend(motor_angle_queue, (void *)&int_deg, 10);
+        //int_deg = (int32_t)deg;
+        ESP_LOGD(TAG_ROTARY_SENSOR, "Sending to motor_angle_queue: %.2f degrees.\n", deg);
+        xQueueSend(motor_angle_queue, (void *)&deg, 10);
         //motor_angle_cb(NULL, (void *)&int_deg);
         //ESP_LOGI(TAG_ROTARY_SENSOR, "Stepper int angle is: " PRIi32 "degrees.\n", int_deg);
 
@@ -122,7 +122,7 @@ void rotary_sensor_task(void *params)
         as5600_get_max_angle(&gs_handle, &max_angle);
         ESP_LOGV(TAG_ROTARY_SENSOR, "AS5600 max angle is: %i degrees.\n", max_angle);
 
-        vTaskDelay(200 / portTICK_PERIOD_MS);
+        vTaskDelay(50 / portTICK_PERIOD_MS);
     }
 
     as5600_basic_deinit();

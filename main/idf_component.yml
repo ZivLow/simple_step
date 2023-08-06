@@ -14,7 +14,10 @@ dependencies:
   #
   # # Or in a longer form with extra parameters
   espressif/button:
-    version: "^2.5.1"
+    version: "^2.5.4"
+
+  espressif/pid_ctrl:
+    version: "^0.2.0"
   #
   #   # For transient dependencies `public` flag can be set.
   #   # `public` flag doesn't have an effect for the `main` component.

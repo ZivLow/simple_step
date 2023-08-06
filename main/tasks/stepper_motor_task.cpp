@@ -6,9 +6,10 @@
 #include "esp_log.h"
 #include "simple_step.hpp"
 #include "tasks/stepper_motor_task.hpp"
+#include <math.h>
 
-#define UART_MAX_DELAY    100
-#define CRC_TABLE_INDEX   1             // Choose CRC table index 0 or 1
+#define UART_MAX_DELAY    50
+#define CRC_TABLE_INDEX   1                        // Choose CRC table index 0 or 1
 
 static const char *TAG = "TMC2209 Driver";
 
@@ -20,9 +21,28 @@ TMC2209TypeDef *tmc2209_driver = &tmc2209_driver_def;
 ConfigurationTypeDef tmc_2209_driver_config_def;
 ConfigurationTypeDef *tmc_2209_driver_config = &tmc_2209_driver_config_def;
 
-// Struct for TMC ramp
-TMC_LinearRamp tmc_ramp_def;
-TMC_LinearRamp *tmc_ramp = &tmc_ramp_def;
+// Tuning gains
+static float stepper_Kp_gain = 25;
+static float stepper_Ki_gain = 0.0;
+static float stepper_Kd_gain = 0.0;
+
+// Declare struct instances for PID controller
+pid_ctrl_parameter_t pid_ctrl_parameter_def = {
+    .kp           = stepper_Kp_gain,               // PID Kp parameter
+    .ki           = stepper_Ki_gain,               // PID Ki parameter
+    .kd           = stepper_Kd_gain,               // PID Kd parameter
+    .max_output   = 10000,                         // PID maximum output limitation
+    .min_output   = -10000,                        // PID minimum output limitation
+    .max_integral = 30000,                         // PID maximum integral value limitation
+    .min_integral = -30000,                        // PID minimum integral value limitation
+    .cal_type     = PID_CAL_TYPE_INCREMENTAL,      // PID calculation type
+};
+pid_ctrl_config_t pid_ctrl_config_def = {
+    .init_param = pid_ctrl_parameter_def,          // Initial parameters
+};
+pid_ctrl_config_t *pid_ctrl_config = &pid_ctrl_config_def;
+pid_ctrl_block_handle_t pid_ctrl_block_handle_def;
+pid_ctrl_block_handle_t *pid_ctrl_block_handle = &pid_ctrl_block_handle_def;
 
 // |================================================================================================ |
 // |                                          Functions                                              |
@@ -32,7 +52,10 @@ TMC_LinearRamp *tmc_ramp = &tmc_ramp_def;
 void tmc2209_readWriteArray(uint8_t channel, uint8_t *data, size_t writeLength, size_t readLength)
 {
     uart_write_bytes(channel, data, writeLength);
-    uart_wait_tx_done(channel, UART_MAX_DELAY);
+    esp_err_t ret = uart_wait_tx_done(channel, UART_MAX_DELAY);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "uart_wait_tx_done() failed: %d", ret);
+    }
     uart_flush(channel);
     if (readLength){
         uart_read_bytes(channel, data, readLength, UART_MAX_DELAY);
@@ -101,21 +124,6 @@ void stepper_motor_task(void *params)
 
     const gpio_pins_config_t *gpio_pins_config = (gpio_pins_config_t *)params;
 
-    // TMC Ramp Setup
-    tmc_ramp_linear_init(tmc_ramp);
-    tmc_ramp_linear_set_precision(tmc_ramp, 5);
-    tmc_ramp_linear_set_maxVelocity(tmc_ramp, 6000);
-    tmc_ramp_linear_set_acceleration(tmc_ramp, 150);
-
-    // For position type control
-    tmc_ramp_linear_set_mode(tmc_ramp, TMC_RAMP_LINEAR_MODE_POSITION);
-    tmc_ramp_linear_set_targetPosition(tmc_ramp, 180);
-
-    // For velocity type control
-    // tmc_ramp_linear_set_mode(tmc_ramp, TMC_RAMP_LINEAR_MODE_VELOCITY);
-    // tmc_ramp_linear_set_targetVelocity(tmc_ramp, 312);
-    
-
     // Setup gpio and uart for TMC2209 driver
     configure_gpio(gpio_pins_config);
     configure_uart(115200, gpio_pins_config);
@@ -143,69 +151,59 @@ void stepper_motor_task(void *params)
     // Set hold current
     TMC2209_FIELD_WRITE(tmc2209_driver, TMC2209_IHOLD_IRUN, TMC2209_IHOLD_MASK, TMC2209_IHOLD_SHIFT, 0);
     // Set run current
-    TMC2209_FIELD_WRITE(tmc2209_driver, TMC2209_IHOLD_IRUN, TMC2209_IRUN_MASK, TMC2209_IRUN_SHIFT, 1);
+    TMC2209_FIELD_WRITE(tmc2209_driver, TMC2209_IHOLD_IRUN, TMC2209_IRUN_MASK, TMC2209_IRUN_SHIFT, 0);
     // Set hold current decay delay
     TMC2209_FIELD_WRITE(tmc2209_driver, TMC2209_IHOLD_IRUN, TMC2209_IHOLDDELAY_MASK, TMC2209_IHOLDDELAY_SHIFT, 15);
     // Set freewheeling
     TMC2209_FIELD_WRITE(tmc2209_driver, TMC2209_PWMCONF, TMC2209_FREEWHEEL_MASK, TMC2209_FREEWHEEL_SHIFT, 1);
     // StealthChop --> SpreadCycle threshold velocity
-    TMC2209_FIELD_WRITE(tmc2209_driver, TMC2209_TPWMTHRS, TMC2209_TPWMTHRS_MASK, TMC2209_TPWMTHRS_SHIFT, 500);
+    TMC2209_FIELD_WRITE(tmc2209_driver, TMC2209_TPWMTHRS, TMC2209_TPWMTHRS_MASK, TMC2209_TPWMTHRS_SHIFT, 5000);
     // Set StealthChop (StealthChop ignores current settings)
     TMC2209_FIELD_WRITE(tmc2209_driver, TMC2209_PWMCONF, TMC2209_PWM_AUTOSCALE_MASK, TMC2209_PWM_AUTOSCALE_SHIFT, 1);
     TMC2209_FIELD_WRITE(tmc2209_driver, TMC2209_PWMCONF, TMC2209_PWM_GRAD_MASK, TMC2209_PWM_GRAD_SHIFT, 1);
+    // Driver version
+    int32_t driver_version_status = TMC2209_FIELD_READ(tmc2209_driver, TMC2209_IOIN, TMC2209_VERSION_MASK, TMC2209_VERSION_SHIFT);
+    ESP_LOGD(TAG, "driver_version_status: %" PRIi32, driver_version_status);
 
-    // while (tmc2209_driver->config->state != CONFIG_READY) {
-    //     vTaskDelay(100 / portTICK_PERIOD_MS);
-    // }
+    // Need to wait as long as 700ms for TMC driver to be ready
+    while (tmc2209_driver->config->state != CONFIG_READY) {
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
     gpio_set_level(gpio_pins_config->EN_PIN, 0);         // Enable driver in hardware
 
+    // Configure PID controller
+    pid_new_control_block(pid_ctrl_config, pid_ctrl_block_handle);
 
-    // static bool direction = false;
-
-    int32_t data_received;
-
-    if (xQueueReceive(motor_angle_queue, &data_received, portMAX_DELAY))
-    {
-        ESP_LOGD(TAG, "Receiving from motor_angle_queue: %" PRIi32, (int32_t) data_received);
-        // tmc_ramp_linear_set_rampPosition(tmc_ramp, (int32_t) data_received);
-        tmc_ramp_linear_set_rampPosition(tmc_ramp, 0);
-    }
-
-    
+    float angle_received;
+    float pid_compute_output;
+    static float target_position = 140;
 
     while (true) {
         // // Change direction
         // direction = !direction;
         // TMC2209_FIELD_WRITE(tmc2209_driver, TMC2209_GCONF, TMC2209_SHAFT_MASK, TMC2209_SHAFT_SHIFT, direction);
 
-        // // Set motor velocity
-        // TMC2209_FIELD_WRITE(tmc2209_driver, TMC2209_VACTUAL, TMC2209_VACTUAL_MASK, TMC2209_VACTUAL_SHIFT, 5000);
-        
-        // int32_t gconf_status = TMC2209_FIELD_READ(tmc2209_driver, TMC2209_GCONF, TMC2209_PDN_DISABLE_MASK, TMC2209_PDN_DISABLE_SHIFT);
-        // ESP_LOGD(TAG, "gconf_status: %" PRIi32, gconf_status);
-
-        // int32_t driver_version_status = TMC2209_FIELD_READ(tmc2209_driver, TMC2209_IOIN, TMC2209_VERSION_MASK, TMC2209_VERSION_SHIFT);
-        // ESP_LOGD(TAG, "driver_version_status: %" PRIi32, driver_version_status);
-        
-        // vTaskDelay(3000 / portTICK_PERIOD_MS);
-
-        
-
-        if (xQueueReceive(motor_angle_queue, &data_received, UART_MAX_DELAY))
+        if (xQueueReceive(motor_angle_queue, &angle_received, 10))
         {
-            ESP_LOGD(TAG, "Receiving from motor_angle_queue: %" PRIi32, (int32_t) data_received);
-            // tmc_ramp_linear_set_rampPosition(tmc_ramp, (int32_t) data_received);
+            ESP_LOGD(TAG, "Receiving from motor_angle_queue: %.2f degrees.\n", angle_received);
+
+            float position_error = target_position - angle_received;
+
+            // Convert angle to range (-180, 180]
+            position_error -= ceil(position_error / 360 - 0.5) * 360;
+
+            pid_compute(*pid_ctrl_block_handle, position_error, &pid_compute_output);
+
+            ESP_LOGD(TAG, "position_error: %.2f degrees.\n", position_error);
+            ESP_LOGD(TAG, "pid_compute_output: %.2f\n", pid_compute_output);
+
+            // Update motor velocity
+            TMC2209_FIELD_WRITE(tmc2209_driver, TMC2209_VACTUAL, TMC2209_VACTUAL_MASK, TMC2209_VACTUAL_SHIFT, (int32_t) pid_compute_output);
         }
-
-        int32_t computed_velocity = tmc_ramp_linear_compute(tmc_ramp);
-        ESP_LOGD(TAG, "LinearRamp State: %" PRIu32, (uint32_t) tmc_ramp_linear_get_state(tmc_ramp));
-        ESP_LOGD(TAG, "Readout from linearRamp: %" PRIu32, (uint32_t) tmc_ramp_linear_get_acceleration_limit(tmc_ramp));
-        ESP_LOGD(TAG, "New computed velocity: %" PRIi32, computed_velocity);
-
-        // Set motor velocity
-        TMC2209_FIELD_WRITE(tmc2209_driver, TMC2209_VACTUAL, TMC2209_VACTUAL_MASK, TMC2209_VACTUAL_SHIFT, computed_velocity);
-
-        vTaskDelay(200 / portTICK_PERIOD_MS);
+        else
+        {
+            vTaskDelay(20 / portTICK_PERIOD_MS);
+        }
     }
     
 }
