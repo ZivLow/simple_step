@@ -1,5 +1,6 @@
 /.devcontainer
 /.vscode/c_cpp_properties.json
+/.vscode/settings.json
 /build
 sdkconfig
 sdkconfig.old
